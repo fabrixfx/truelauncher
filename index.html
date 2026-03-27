@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Repository</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        :root {
+            --m3-surface: #F8F9FF;
+            --m3-primary: #0061A4;
+            --m3-container: #D1E4FF;
+            --m3-on-container: #001D36;
+            --m3-outline: #74777F;
+            --m3-card: #FFFFFF;
+        }
+        body {
+            font-family: 'Google Sans', sans-serif;
+            background-color: var(--m3-surface);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+        .header-title {
+            font-size: 28px;
+            color: var(--m3-on-container);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        .file-list {
+            background: var(--m3-card);
+            border-radius: 28px;
+            padding: 8px;
+            border: 1px solid var(--m3-container);
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--m3-on-container);
+            transition: background 0.2s ease;
+        }
+        .item:hover {
+            background-color: var(--m3-container);
+        }
+        .item-icon {
+            background: var(--m3-container);
+            color: var(--m3-primary);
+            padding: 12px;
+            border-radius: 16px;
+            margin-right: 16px;
+        }
+        .info { flex-grow: 1; }
+        .info b { display: block; font-size: 16px; color: var(--m3-on-container); }
+        .info span { font-size: 13px; color: var(--m3-outline); }
+        .download-icon { color: var(--m3-primary); }
+        
+        /* Скелетон загрузки */
+        #loader { padding: 20px; text-align: center; color: var(--m3-outline); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">Репозиторий сборок</div>
+    <div class="file-list" id="fileList">
+        <div id="loader">Синхронизация с GitHub...</div>
+    </div>
+</div>
+
+<script>
+    // НАСТРОЙКИ ТВОЕГО РЕПОЗИТОРИЯ
+    const USER = 'ТВОЙ_ЛОГИН_GITHUB';
+    const REPO = 'ИМЯ_РЕПОЗИТОРИЯ';
+    const FOLDER = 'builds';
+
+    async function fetchBuilds() {
+        const url = `https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`;
+        
+        try {
+            const response = await fetch(url);
+            const items = await response.json();
+            const listContainer = document.getElementById('fileList');
+            listContainer.innerHTML = '';
+
+            if (!Array.isArray(items)) {
+                listContainer.innerHTML = '<div id="loader">Файлы не найдены</div>';
+                return;
+            }
+
+            items.forEach(file => {
+                if (file.type === 'file') {
+                    // Конвертируем байты в МБ
+                    const sizeMb = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                    
+                    const itemHtml = `
+                        <a href="${file.download_url}" class="item" target="_blank">
+                            <div class="material-icons-outlined item-icon">description</div>
+                            <div class="info">
+                                <b>${file.name}</b>
+                                <span>${sizeMb}</span>
+                            </div>
+                            <span class="material-icons-outlined download-icon">download</span>
+                        </a>
+                    `;
+                    listContainer.innerHTML += itemHtml;
+                }
+            });
+        } catch (error) {
+            document.getElementById('loader').innerText = 'Ошибка загрузки данных';
+        }
+    }
+
+    fetchBuilds();
+</script>
+
+</body>
+</html>
